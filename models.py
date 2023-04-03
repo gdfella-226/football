@@ -19,19 +19,18 @@ class Tour(Base):
     name = Column(Text)
     date_start = Column(Text)
     date_end = Column(Text)
-    field = Column(Text)
+    ForeignKeyConstraint(["name"], ["Field.name"])
 
 
 class Field(Base):
     __tablename__ = "fields"
     id = Column(Integer, unique=True, primary_key=True, autoincrement=True)
     name = Column(Text)
-    ForeignKeyConstraint(["stadium"], ["Tour.field"])
+    stadium = Column(Text)
     format = Column(Integer)
     start_time = Column(Text)
     duration = Column(Text)
     plays = Column(Integer)
-    stadium = Column(Text)
 
 
 class Games(Base):

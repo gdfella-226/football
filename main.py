@@ -1,27 +1,20 @@
 import models
+from class_point import Point
 from database import init_db, SESSIONLOCAL, ENGINE
 
 init_db()
 ENGINE.connect()
 database = SESSIONLOCAL()
 
-
-class Point:
-    def __init__(self, team):
-        self.team = models.Team
-        self.potential = []
-
-
 mass = []
 
-# row = models.Team(name="asd", coach="dasads", division="sadasd")
+# row = models.Team(name="asd", coach="dasads", division="sadasd", )
 
 # database.add(row)
 # database.commit()
 
 rows = database.query(models.Team).count()
 teams = database.query(models.Team)
-fields = database.query(models.Field)
 
 for i in range(rows):
     team = teams.filter(
@@ -44,7 +37,7 @@ for i in range(rows):
             mass_time[0] <= mass_union_time[1] or len(mass_time) == 0 or len(mass_union_time) == 0) and mass[
             i].team.coach != mass[j].team.coach and \
                 coachthin.filter(models.Team.id[i]) == coachthin.filter(models.Team.id[j]) or \
-                coachthin.filter(models.Team.id[i]) == "" or coachthin.filter(models.Team.id[j]) == "" and database.query(models.Team.division).filter(
+                coachthin.filter(models.Team.id[i]) == "" or coachthin.filter(
+            models.Team.id[j]) == "" and database.query(models.Team.division).filter(
             models.Team.id == i) != database.query(models.Team.division).filter(models.Team.id == j):
             mass[i].potential.append(database.query(models.Team).filter(models.Team.id == j))
-
