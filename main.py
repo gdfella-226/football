@@ -1,47 +1,80 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, QTableWidgetItem, QPushButton
-from PyQt5.QtCore import QSize, Qt
+from sys import argv, exit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
+    QPushButton, QVBoxLayout
+from PyQt5.QtCore import QSize, Qt, pyqtSlot
 
 
 class MainWindow(QMainWindow):
-    # Override class constructor
     def __init__(self):
-        # You must call the super class method
         QMainWindow.__init__(self)
+        self.scene = None
+        self.table = None
+        self.dump = None
 
-        self.setMinimumSize(QSize(1080, 800))  # Set sizes
-        self.setWindowTitle("Работа с QTableWidget")  # Set the window title
-        central_widget = QWidget(self)  # Create a central widget
-        self.setCentralWidget(central_widget)  # Install the central widget
+        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
+                                       "Дата", "Стадион", "Время", "Доп. Время"], self.enter2)
 
-        grid_layout = QGridLayout(self)  # Create QGridLayout
-        central_widget.setLayout(grid_layout)  # Set this layout in central widget
+    def show_scene(self, title, cols, headers, func):
+        self.setWindowTitle(title)
+        self.setMinimumSize(QSize(1080, 800))
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
 
-        table = QTableWidget(self)  # Create a table
-        table.setColumnCount(7)  # Set three columns
-        table.setRowCount(370)  # and one row
+        grid_layout = QGridLayout(self)
+        central_widget.setLayout(grid_layout)
 
-        # Set the table headers
-        table.setHorizontalHeaderLabels(["Команда", "Дивизион", "Формат",
-                                         "Тренер", "Дата", "Стадион", "Время"])
-
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(cols)
+        self.table.setRowCount(1)
+        self.table.setHorizontalHeaderLabels(headers)
 
         button_enter = QPushButton('Ввод', self)
-        button_clear = QPushButton('Сброс', self)
+        button_enter.clicked.connect(func)
 
-        grid_layout.addWidget(table, 0, 0)
+        button_clear = QPushButton('Добавить команду', self)
+        button_clear.clicked.connect(self.insert)
+
+        grid_layout.addWidget(self.table, 0, 0)
         inner_grid = QGridLayout(self)
         grid_layout.addLayout(inner_grid, 0, 1)
         inner_grid.addWidget(button_clear, 0, 0)
         inner_grid.addWidget(button_enter, 1, 0)
-        #button_clear.move(1000, 100)
-        #button_enter.move(0, 130)
-        self.showMaximized()
+
+    @pyqtSlot()
+    def insert(self):
+        self.table.setRowCount(self.table.rowCount() + 1)
+
+    @pyqtSlot()
+    def enter1(self):
+        # self.read()
+        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
+                                       "Дата", "Стадион", "Время", "Доп. Время"], self.enter2)
+        #self.close()
+
+    @pyqtSlot()
+    def enter2(self):
+        self.read()
+        self.show_scene('Данные по туру', 7, ["Формат", "Дата", "Стадион", "Поле",
+                                              "Время", "Время игры", "Количество игр"], self.enter3)
+        #self.close()
+
+    @pyqtSlot()
+    def enter3(self):
+        pass
+
+    def read(self):
+        dump = []
+        for i in range(0, self.table.rowCount()):
+            dump.append([])
+            for j in range(0, self.table.columnCount()):
+                item = self.table.item(i, j)
+                dump[i].append(item.text())
+        print(dump)
+        self.dump = dump
 
 
 if __name__ == "__main__":
-    import sys
-
-    app = QApplication(sys.argv)
+    app = QApplication(argv)
     mw = MainWindow()
-    mw.show()
-    sys.exit(app.exec())
+    mw.showMaximized()
+    exit(app.exec())
