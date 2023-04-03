@@ -9,14 +9,16 @@ class Team(Base):
     id = Column(Integer, unique=True, primary_key=True, autoincrement=True)
     coach = Column(Text)
     division = Column(Text)
-
+    time_wish = Column(Text)
+    stadium_wish = Column(Text)
+    #match_time = Column(Text)
 
 class Tour(Base):
     __tablename__ = "tours"
     id = Column(Integer, unique=True, primary_key=True, autoincrement=True)
     name = Column(Text)
-    date_start = Column(Date)
-    date_end = Column(Date)
+    date_start = Column(Text)
+    date_end = Column(Text)
     field = Column(Text)
 
 
@@ -26,9 +28,10 @@ class Field(Base):
     name = Column(Text)
     ForeignKeyConstraint(["stadium"], ["Tour.field"])
     format = Column(Integer)
-    start_time = Column(Time)
-    duration = Column(Time)
+    start_time = Column(Text)
+    duration = Column(Text)
     plays = Column(Integer)
+    stadium = Column(Text)
 
 
 class Games(Base):
@@ -38,4 +41,3 @@ class Games(Base):
     ForeignKeyConstraint(["team2"], ["Team.id"])
     flag = Column(Boolean)
     ForeignKeyConstraint(["tour"], ["Tour.id"])
-
