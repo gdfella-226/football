@@ -1,7 +1,8 @@
 from sys import argv, exit
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
     QPushButton, QComboBox, QTableWidgetItem, QMessageBox
-from PyQt5.QtCore import QSize, Qt, pyqtSlot
+from PyQt5.QtCore import QSize, pyqtSlot
+from DataParser import DataParser
 
 
 class MainWindow(QMainWindow):
@@ -11,9 +12,10 @@ class MainWindow(QMainWindow):
         self.table = None
         self.dump1 = None
         self.dump2 = None
-        self.dump3 = None
+        self.dump3 = []
+        self.data = None
         self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
-                                        "Дата", "Стадион", "Время", "Желаемое Время"], self.enter2)
+                                       "Дата", "Стадион", "Время", "Желаемое Время"], self.enter2)
         #self.scene3()
 
     def show_scene(self, title, cols, headers, func):
@@ -53,11 +55,8 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(grid_layout)
 
         self.cb = QComboBox()
-        self.data = {
-              "division1": ["team1", "team2", "team3"],
-              "division2": ["team4", "team5", "team6"],
-              "division3": ["team7", "team8", "team9"]
-            }
+
+        self.cb.addItem("Дивизион")
         for i in list(self.data.keys()):
             self.cb.addItem(i)
 
@@ -65,19 +64,20 @@ class MainWindow(QMainWindow):
         self.table = QTableWidget(self)
 
         button_enter = QPushButton('Ввод', self)
-        button_enter.clicked.connect(self.prev_games)
+        button_enter.clicked.connect(self.get_games)
+        button_save = QPushButton('Сохранить', self)
+        button_save.clicked.connect(self.save)
 
         grid_layout.addWidget(self.table, 0, 0)
         inner_grid = QGridLayout(self)
         grid_layout.addLayout(inner_grid, 0, 1)
         inner_grid.addWidget(self.cb, 0, 0)
         inner_grid.addWidget(button_enter, 1, 0)
+        inner_grid.addWidget(button_save, 2, 0)
 
     def selection_change(self):
-        try:
-            self.get_games()
-        except:
-            pass
+        if "Дивизион" in [self.cb.itemText(i) for i in range(self.cb.count())]:
+            self.cb.removeItem(0)
         key = self.cb.currentText()
         commands = self.data[key]
         commands *= (len(commands))
@@ -92,64 +92,15 @@ class MainWindow(QMainWindow):
             self.table.setItem(res.index(i), 1, QTableWidgetItem(i[1]))
             self.table.setItem(res.index(i), 0, QTableWidgetItem(i[0]))
 
-    def get_games(self):
-        res = []
-        for i in range(0, self.table.rowCount()):
-            res.append([])
-            for j in range(0, self.table.columnCount()):
-                res[i].append(self.table.item(i, j).text())
-        self.dump3 += res
-
-    def read(self, flag):
-        dump = []
-        while not dump:
-            for i in range(0, self.table.rowCount()):
-                dump.append([])
-                for j in range(0, self.table.columnCount()):
-                    item = self.table.item(i, j)
-                    if flag == 1 and j == 7 and item.text() == '':
-                        dump[i].append('00:00-24:00')
-                    else:
-                        dump[i].append(item.text())
-            print(dump)
-            for i in dump:
-                if '' in i:
-                    QMessageBox.warning(self, "ВНИМАНИЕ!", "Заполните таблицу, перед тем как продолжить работу")
-                    dump = []
-                    break
-
-        if flag == 1:
-            self.dump1 = dump
-        elif flag == 2:
-            self.dump2 = dump
+    def remove_current_item(self):
+        current_index = self.cb.currentIndex()
+        if current_index != -1:
+            self.cb.removeItem(current_index)
 
     @pyqtSlot()
-    def insert(self):
-        self.table.setRowCount(self.table.rowCount() + 1)
-        self.table.setItem(0, self.table.rowCount(), QTableWidgetItem(''))
-
-    @pyqtSlot()
-    def enter1(self):
-        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
-                                       "Дата", "Стадион", "Время", "Доп. Время"], self.enter2)
-
-    @pyqtSlot()
-    def enter2(self):
-        self.read(1)
-        self.show_scene('Данные по туру', 7, ["Формат", "Дата", "Стадион", "Поле",
-                                              "Время", "Время игры", "Количество игр"], self.enter3)
-
-    @pyqtSlot()
-    def enter3(self):
-        self.read(2)
-        self.scene3()
-
-    @pyqtSlot()
-    def prev_games(self):
-        try:
-            self.get_games()
-        except:
-            pass
+    def save(self):
+        QMessageBox.warning(self, "Данные сохранены!", "Ожидайте составления результата")
+        self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
         for i in self.dump1:
             print(i)
         print('--------------------------------')
@@ -159,9 +110,74 @@ class MainWindow(QMainWindow):
         for i in self.dump3:
             print(i)
 
+    @pyqtSlot()
+    def get_games(self):
+        if self.cb.currentText() == "Дивизион":
+            return
+        res = []
+        for i in range(0, self.table.rowCount()):
+            res.append([])
+            for j in range(0, self.table.columnCount()):
+                res[i].append(self.table.item(i, j).text())
+        self.dump3 += res
+        if self.cb.count() <= 1:
+            return
+        else:
+            self.remove_current_item()
+
+    def read(self, flag):
+        dump = []
+        check = False
+        for i in range(0, self.table.rowCount()):
+            dump.append([])
+            for j in range(0, self.table.columnCount()):
+                item = self.table.item(i, j)
+                if flag == 1 and j == 7 and item.text() == '':
+                    dump[i].append('00:00-24:00')
+                else:
+                    dump[i].append(item.text())
+            if '' in dump[i]:
+                check = True
+                break
+
+        if check:
+            QMessageBox.warning(self, "ВНИМАНИЕ!", "Заполните таблицу, перед тем как продолжить работу")
+        else:
+            if flag == 1:
+                self.dump1 = dump
+                self.data = DataParser.form_divs(self.dump1)
+                self.show_scene('Данные по туру', 7, ["Формат", "Дата", "Стадион", "Поле",
+                                                      "Время", "Время игры", "Количество игр"], self.enter3)
+            elif flag == 2:
+                self.dump2 = dump
+                self.scene3()
+
+    @pyqtSlot()
+    def insert(self):
+        self.table.setRowCount(self.table.rowCount() + 1)
+        for i in range(self.table.columnCount()):
+            self.table.setItem(self.table.rowCount()-1, i, QTableWidgetItem(''))
+
+    @pyqtSlot()
+    def enter1(self):
+        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
+                                       "Дата", "Стадион", "Время", "Доп. Время"], self.enter2)
+
+    @pyqtSlot()
+    def enter2(self):
+        self.read(1)
+
+    @pyqtSlot()
+    def enter3(self):
+        self.read(2)
+
+    def get_data(self):
+        return [self.dump1, self.dump2, self.dump3]
+
 
 if __name__ == "__main__":
     app = QApplication(argv)
     mw = MainWindow()
     mw.showMaximized()
     exit(app.exec())
+
