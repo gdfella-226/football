@@ -11,6 +11,7 @@ class Team(Base):
     division = Column(Text)
     time_wish = Column(Text)
     stadium_wish = Column(Text)
+    format = Column(Text)
     #match_time = Column(Text)
 
 class Tour(Base):
@@ -30,7 +31,7 @@ class Field(Base):
     format = Column(Integer)
     start_time = Column(Text)
     duration = Column(Text)
-    plays = Column(Integer)
+    games_amount = Column(Integer)
 
 
 class Games(Base):
