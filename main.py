@@ -1,8 +1,5 @@
 from class_day import Day
-from itertools import groupby
 import models
-import create_fields
-from class_point import Point
 from database import init_db, SESSIONLOCAL, ENGINE
 
 
@@ -61,7 +58,7 @@ stadiums = list(set(stadiums))
 
 for i in range(len(stadiums)):
     f = stadiums[i]
-    # массив в котором хранятся команда с пожеланием по определенному стадиону
+    # массив, в котором хранятся команды с пожеланием по определенному стадиону
     s = database.query(models.Team).filter(models.Team.stadium_wish == f).all()
 
 
