@@ -1,8 +1,16 @@
 from sys import argv, exit
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
-    QPushButton, QComboBox, QTableWidgetItem, QMessageBox
+    QPushButton, QComboBox, QTableWidgetItem, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, pyqtSlot
 from DataParser import DataParser
+from openpyxl import Workbook
+import models
+from database import init_db, SESSIONLOCAL, Base
+
+init_db()
+
+Database = SESSIONLOCAL
+database = Database()
 
 
 class MainWindow(QMainWindow):
@@ -16,7 +24,6 @@ class MainWindow(QMainWindow):
         self.data = None
         self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
                                        "Дата", "Стадион", "Время", "Желаемое Время"], self.enter2)
-        #self.scene3()
 
     def show_scene(self, title, cols, headers, func):
         self.setWindowTitle(title)
@@ -97,10 +104,18 @@ class MainWindow(QMainWindow):
         if current_index != -1:
             self.cb.removeItem(current_index)
 
+    def load_to_file(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Directory")
+        file = path + "/расписание.xlsx"
+        wb = Workbook()
+
+        wb.save(file)
+
     @pyqtSlot()
     def save(self):
-        QMessageBox.warning(self, "Данные сохранены!", "Ожидайте составления результата")
         self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
+        self.load_to_file()
+        MainWindow.drop_db()
         for i in self.dump1:
             print(i)
         print('--------------------------------')
@@ -125,6 +140,38 @@ class MainWindow(QMainWindow):
         else:
             self.remove_current_item()
 
+    def to_db1(self):
+        for row in self.dump1:
+            team = models.Team(name=row[0],
+                               division=row[1],
+                               format=row[2],
+                               coach=row[3],
+                               date=row[4],
+                               stadium_wish=row[5],
+                               time_wish=row[6],
+                               time_wish2=row[7])
+            database.add(team)
+        database.commit()
+
+    def to_db2(self):
+        for row in self.dump2:
+            field = models.Field(format=row[0],
+                                 date=row[1],
+                                 stadium=row[2],
+                                 name=row[3],
+                                 start_time=row[4],
+                                 duration=row[5],
+                                 plays_amount=row[6])
+            database.add(field)
+        database.commit()
+
+    @staticmethod
+    def drop_db():
+        meta = Base.metadata
+        for table in reversed(meta.sorted_tables):
+            database.execute(table.delete())
+        database.commit()
+
     def read(self, flag):
         dump = []
         check = False
@@ -132,8 +179,8 @@ class MainWindow(QMainWindow):
             dump.append([])
             for j in range(0, self.table.columnCount()):
                 item = self.table.item(i, j)
-                if flag == 1 and j == 7 and item.text() == '':
-                    dump[i].append('00:00-24:00')
+                if flag == 1 and (j == 7 or j == 6) and item.text() == '':
+                    dump[i].append(None)
                 else:
                     dump[i].append(item.text())
             if '' in dump[i]:
@@ -146,17 +193,19 @@ class MainWindow(QMainWindow):
             if flag == 1:
                 self.dump1 = dump
                 self.data = DataParser.form_divs(self.dump1)
+                self.to_db1()
                 self.show_scene('Данные по туру', 7, ["Формат", "Дата", "Стадион", "Поле",
                                                       "Время", "Время игры", "Количество игр"], self.enter3)
             elif flag == 2:
                 self.dump2 = dump
+                self.to_db2()
                 self.scene3()
 
     @pyqtSlot()
     def insert(self):
         self.table.setRowCount(self.table.rowCount() + 1)
         for i in range(self.table.columnCount()):
-            self.table.setItem(self.table.rowCount()-1, i, QTableWidgetItem(''))
+            self.table.setItem(self.table.rowCount() - 1, i, QTableWidgetItem(''))
 
     @pyqtSlot()
     def enter1(self):
@@ -180,4 +229,7 @@ if __name__ == "__main__":
     mw = MainWindow()
     mw.showMaximized()
     exit(app.exec())
+
+
+
 
