@@ -1,4 +1,4 @@
-import models
+'''import models
 from class_day import Day
 from main import database
 
@@ -12,3 +12,4 @@ for i in range(count_field):
     c = Day(start, float(duration))
     k = [fields_mass.filter(models.Field.id == i), c]
     fields.append(k)
+'''

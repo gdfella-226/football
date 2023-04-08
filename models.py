@@ -22,7 +22,6 @@ class Tour(Base):
     date_end = Column(Text)
     ForeignKeyConstraint(["name"], ["Field.name"])
 
-
 class Field(Base):
     __tablename__ = "fields"
     id = Column(Integer, unique=True, primary_key=True, autoincrement=True)
@@ -36,7 +35,7 @@ class Field(Base):
 
 class Games(Base):
     __tablename__ = "games"
-    ss = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     ForeignKeyConstraint(["team1"], ["Team.id"])
     ForeignKeyConstraint(["team2"], ["Team.id"])
     flag = Column(Boolean)
