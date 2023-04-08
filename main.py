@@ -46,9 +46,11 @@ for i in range(len(days_db)):
     field = Fields(k, day)
     days.append(field)
 
+
 mass_games = []
 
 stadiums = []
+
 
 for i in range(len(days_db)):
     stadiums.append(days_db[i].stadium)
@@ -58,12 +60,21 @@ stadiums = list(set(stadiums))
 
 for i in range(len(stadiums)):
     f = stadiums[i]
-    # массив, в котором хранятся команды с пожеланием по определенному стадиону
-    s = database.query(models.Team).filter(models.Team.stadium_wish == f).all()
-
-
-
-
+    '''# массив, в котором хранятся команды с пожеланием по определенному стадиону
+    s = database.query(models.Team).filter(models.Team.stadium_wish == f).all()'''
+    s = []
+    for j in range(len(mass_teams)):
+        if mass_teams[j].team.stadium_wish == f:
+            s.append(mass_teams[j])
+    '''print(f)
+    print(":")
+    for k in range(len(s)):
+        print(s[k].team.name)
+    '''
+    use_fields = [] #массив days, отсортированный по стадиону
+    for k in range(len(days)):
+        if days[k].field.stadium == f:
+            use_fields.append(days[k])
 
 
 
