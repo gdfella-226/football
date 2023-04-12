@@ -79,8 +79,9 @@ for i in range(len(stadiums)):
         print(s[p].team.time_wish)'''
     while len(s) > 1:
         for q in range(len(s) - 1):
-            if len(s) < 1:
+            if len(s) < 2:
                 break
+
             n_left = int(s[0].team.time_wish[:2])
             n_right = int(s[0].team.time_wish[6:-3])
             m_left = int(s[q + 1].team.time_wish[:2])
@@ -90,10 +91,12 @@ for i in range(len(stadiums)):
                     for count in range(len(use_fields)):
                         for durat in range(len(use_fields[count].day.mass_time) - 1):
                             if n_left <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
-                                    and len(s) > q:
+                                    and len(s) > 1:
                                 k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]))
+                                #k = Games(s[0], s[q], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
                                 print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                #print(s[0].team.name, s[q].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
                                 '''
@@ -155,5 +158,3 @@ for i in range(len(stadiums)):
                                 '''
                                 use_fields[count].day.mass_time.pop(durat)
         break
-
-
