@@ -57,26 +57,16 @@ stadiums = list(set(stadiums))
 
 for i in range(len(stadiums)):
     f = stadiums[i]
-    '''# массив, в котором хранятся команды с пожеланием по определенному стадиону
-    s = database.query(models.Team).filter(models.Team.stadium_wish == f).all()'''
+    # массив, в котором хранятся команды с пожеланием по определенному стадиону
     s = []
     for j in range(len(mass_teams)):
         if mass_teams[j].team.stadium_wish == f:
             s.append(mass_teams[j])
-    '''print(f)
-    print(":")
-    for k in range(len(s)):
-        print(s[k].team.name)'''
 
     use_fields = []  # массив days, отсортированный по стадиону
     for k in range(len(days)):
         if days[k].field.stadium == f:
             use_fields.append(days[k])
-    '''print(use_fields[0].field.start_time, use_fields[0].field.duration)
-    print(s[0].team.time_wish)
-    for p in range(len(s)):
-        print(s[p].team.name)
-        print(s[p].team.time_wish)'''
     while len(s) > 1:
         for q in range(len(s) - 1):
             if len(s) < 2:
@@ -98,12 +88,6 @@ for i in range(len(stadiums)):
                                 #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
-                                '''
-                                print("\n")
-                                for inn in range(len(s)):
-                                    print(s[inn].team.name)
-                                print("\n")
-                                '''
                                 use_fields[count].day.mass_time.pop(durat)
                 elif m_left <= n_right <= m_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
                     for count in range(len(use_fields)):
@@ -115,12 +99,6 @@ for i in range(len(stadiums)):
                                 #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
-                                '''
-                                print("\n")
-                                for inn in range(len(s)):
-                                    print(s[inn].team.name)
-                                print("\n")
-                                '''
                                 use_fields[count].day.mass_time.pop(durat)
                 elif n_left <= m_right <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
                     for count in range(len(use_fields)):
@@ -132,12 +110,6 @@ for i in range(len(stadiums)):
                                 #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
-                                '''
-                                print("\n")
-                                for inn in range(len(s)):
-                                    print(s[inn].team.name)
-                                print("\n")
-                                '''
                                 use_fields[count].day.mass_time.pop(durat)
                 elif n_left <= m_left <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
                     for count in range(len(use_fields)):
@@ -149,12 +121,6 @@ for i in range(len(stadiums)):
                                 #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
-                                '''
-                                print("\n")
-                                for inn in range(len(s)):
-                                    print(s[inn].team.name)
-                                print("\n")
-                                '''
                                 use_fields[count].day.mass_time.pop(durat)
         break
 
@@ -164,9 +130,10 @@ out_teams = []
 for count in range(len(pr)):
     counting = 0
     for i in range(len(mass_games)):
-        if pr[count].name == mass_games[i].team1.team.name or pr[count].name == mass_games[i].team2.team.name:
+        if mass_teams[count].flag and mass_teams[count].team.name == mass_games[i].team1.team.name or \
+                mass_teams[count].team.name == mass_games[i].team2.team.name:
             counting += 1
     if counting == 0:
-        out_teams.append(pr[count])
+        out_teams.append(mass_teams[count].team)
 
 print(len(out_teams))
