@@ -95,8 +95,7 @@ for i in range(len(stadiums)):
                                 k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]))
                                 #k = Games(s[0], s[q], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
-                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
-                                #print(s[0].team.name, s[q].team.name, use_fields[count].day.mass_time[durat])
+                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
                                 '''
@@ -113,7 +112,7 @@ for i in range(len(stadiums)):
                                     and len(s) > q:
                                 k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
-                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
                                 '''
@@ -130,7 +129,7 @@ for i in range(len(stadiums)):
                                     and len(s) > q:
                                 k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
-                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
                                 '''
@@ -147,7 +146,7 @@ for i in range(len(stadiums)):
                                     and len(s) > q:
                                 k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
-                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
                                 s.pop(0)
                                 s.pop(q)
                                 '''
@@ -158,3 +157,16 @@ for i in range(len(stadiums)):
                                 '''
                                 use_fields[count].day.mass_time.pop(durat)
         break
+
+
+out_teams = []
+
+for count in range(len(pr)):
+    counting = 0
+    for i in range(len(mass_games)):
+        if pr[count].name == mass_games[i].team1.team.name or pr[count].name == mass_games[i].team2.team.name:
+            counting += 1
+    if counting == 0:
+        out_teams.append(pr[count])
+
+print(len(out_teams))
