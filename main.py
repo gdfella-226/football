@@ -135,5 +135,7 @@ for count in range(len(pr)):
             counting += 1
     if counting == 0:
         out_teams.append(mass_teams[count].team)
-
+#TODO нужно составить матчи с командами из out_teams и mass_teams, у к-ых !=flag
 print(len(out_teams))
+#TODO нужно составить матчи для всех командов, к-ые остались в mass_teams, у к-ых !=flag
+#TODO возможно(если он заметит) нужно будет составить вторые матчи для каждый команды (просто q в s увеличить на 1 по модулю len(s))
