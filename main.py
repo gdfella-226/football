@@ -77,9 +77,10 @@ for i in range(len(stadiums)):
     for p in range(len(s)):
         print(s[p].team.name)
         print(s[p].team.time_wish)'''
-    print(use_fields[0].day.mass_time)
     while len(s) > 1:
         for q in range(len(s) - 1):
+            if len(s) < 1:
+                break
             n_left = int(s[0].team.time_wish[:2])
             n_right = int(s[0].team.time_wish[6:-3])
             m_left = int(s[q + 1].team.time_wish[:2])
@@ -88,7 +89,59 @@ for i in range(len(stadiums)):
                 if m_left <= n_left <= m_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
                     for count in range(len(use_fields)):
                         for durat in range(len(use_fields[count].day.mass_time) - 1):
-                            if n_left <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5:
+                            if n_left <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
+                                    and len(s) > q:
+                                k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]))
+                                mass_games.append(k)
+                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                s.pop(0)
+                                s.pop(q)
+                                '''
+                                print("\n")
+                                for inn in range(len(s)):
+                                    print(s[inn].team.name)
+                                print("\n")
+                                '''
+                                use_fields[count].day.mass_time.pop(durat)
+                elif m_left <= n_right <= m_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
+                    for count in range(len(use_fields)):
+                        for durat in range(len(use_fields[count].day.mass_time) - 1):
+                            if n_right <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
+                                    and len(s) > q:
+                                k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
+                                mass_games.append(k)
+                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                s.pop(0)
+                                s.pop(q)
+                                '''
+                                print("\n")
+                                for inn in range(len(s)):
+                                    print(s[inn].team.name)
+                                print("\n")
+                                '''
+                                use_fields[count].day.mass_time.pop(durat)
+                elif n_left <= m_right <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
+                    for count in range(len(use_fields)):
+                        for durat in range(len(use_fields[count].day.mass_time) - 1):
+                            if m_right <= use_fields[count].day.mass_time[durat] <= n_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
+                                    and len(s) > q:
+                                k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
+                                mass_games.append(k)
+                                print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
+                                s.pop(0)
+                                s.pop(q)
+                                '''
+                                print("\n")
+                                for inn in range(len(s)):
+                                    print(s[inn].team.name)
+                                print("\n")
+                                '''
+                                use_fields[count].day.mass_time.pop(durat)
+                elif n_left <= m_left <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
+                    for count in range(len(use_fields)):
+                        for durat in range(len(use_fields[count].day.mass_time) - 1):
+                            if m_left <= use_fields[count].day.mass_time[durat] <= n_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
+                                    and len(s) > q:
                                 k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
                                 mass_games.append(k)
                                 print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
@@ -102,4 +155,5 @@ for i in range(len(stadiums)):
                                 '''
                                 use_fields[count].day.mass_time.pop(durat)
         break
+
 
