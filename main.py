@@ -1,141 +1,240 @@
-from class_day import Day
+from sys import argv, exit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
+    QPushButton, QComboBox, QTableWidgetItem, QMessageBox, QFileDialog
+from PyQt5.QtCore import QSize, pyqtSlot
+from DataParser import DataParser
+from openpyxl import Workbook
 import models
-from database import init_db, SESSIONLOCAL, ENGINE
-
-
-class Teams:
-    def __init__(self, team):
-        self.flag = None
-        self.team = team
-
-
-class Fields:
-    def __init__(self, fieldd, dayy: Day):
-        self.field = fieldd
-        self.day = dayy
-
-
-class Games:
-    def __init__(self, team1, team2, time: str):
-        self.team1 = team1
-        self.team2 = team2
-        self.time = time
-
+from database import init_db, SESSIONLOCAL, Base
+from algorithm import calculate
 
 init_db()
-ENGINE.connect()
-database = SESSIONLOCAL()
 
-pr = database.query(models.Team).all()
+Database = SESSIONLOCAL
+database = Database()
 
-mass_teams = []
 
-for i in range(len(pr)):
-    c = Teams(pr[i])
-    mass_teams.append(c)
-    if pr[i].time_wish is not None:
-        mass_teams[i].flag = True
+class MainWindow(QMainWindow):
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.scene = None
+        self.table = None
+        self.dump1 = None
+        self.dump2 = None
+        self.dump3 = []
+        self.data = None
+        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
+                                       "Дата", "Стадион", "Время", "Желаемое Время"], self.enter2)
 
-days_db = database.query(models.Field).all()
+    def show_scene(self, title, cols, headers, func):
+        self.setWindowTitle(title)
+        self.setMinimumSize(QSize(1080, 800))
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
 
-days = []
+        grid_layout = QGridLayout(self)
+        central_widget.setLayout(grid_layout)
 
-for i in range(len(days_db)):
-    k = days_db[i]
-    day = Day(days_db[i].start_time, days_db[i].duration)
-    field = Fields(k, day)
-    days.append(field)
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(cols)
+        self.table.setRowCount(1)
+        self.table.setHorizontalHeaderLabels(headers)
+        for i in range(cols):
+            self.table.setItem(0, i, QTableWidgetItem(''))
 
-mass_games = []
+        button_enter = QPushButton('Ввод', self)
+        button_enter.clicked.connect(func)
 
-stadiums = []
+        button_clear = QPushButton('Добавить команду', self)
+        button_clear.clicked.connect(self.insert)
 
-for i in range(len(days_db)):
-    stadiums.append(days_db[i].stadium)
+        grid_layout.addWidget(self.table, 0, 0)
+        inner_grid = QGridLayout(self)
+        grid_layout.addLayout(inner_grid, 0, 1)
+        inner_grid.addWidget(button_clear, 0, 0)
+        inner_grid.addWidget(button_enter, 1, 0)
 
-stadiums = list(set(stadiums))
+    def scene3(self):
+        self.setWindowTitle("Предыдущие игры")
+        self.setMinimumSize(QSize(1080, 800))
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        grid_layout = QGridLayout(self)
+        central_widget.setLayout(grid_layout)
 
-for i in range(len(stadiums)):
-    f = stadiums[i]
-    # массив, в котором хранятся команды с пожеланием по определенному стадиону
-    s = []
-    for j in range(len(mass_teams)):
-        if mass_teams[j].team.stadium_wish == f:
-            s.append(mass_teams[j])
+        self.cb = QComboBox()
 
-    use_fields = []  # массив days, отсортированный по стадиону
-    for k in range(len(days)):
-        if days[k].field.stadium == f:
-            use_fields.append(days[k])
-    while len(s) > 1:
-        for q in range(len(s) - 1):
-            if len(s) < 2:
+        self.cb.addItem("Дивизион")
+        for i in list(self.data.keys()):
+            self.cb.addItem(i)
+
+        self.cb.currentIndexChanged.connect(self.selection_change)
+        self.table = QTableWidget(self)
+
+        button_enter = QPushButton('Ввод', self)
+        button_enter.clicked.connect(self.get_games)
+        button_save = QPushButton('Сохранить', self)
+        button_save.clicked.connect(self.save)
+
+        grid_layout.addWidget(self.table, 0, 0)
+        inner_grid = QGridLayout(self)
+        grid_layout.addLayout(inner_grid, 0, 1)
+        inner_grid.addWidget(self.cb, 0, 0)
+        inner_grid.addWidget(button_enter, 1, 0)
+        inner_grid.addWidget(button_save, 2, 0)
+
+    def selection_change(self):
+        if "Дивизион" in [self.cb.itemText(i) for i in range(self.cb.count())]:
+            self.cb.removeItem(0)
+        key = self.cb.currentText()
+        commands = self.data[key]
+        commands *= (len(commands))
+        tmp = []
+        for i, j in zip(commands, sorted(commands)):
+            tmp.append([i, j])
+        res = sorted(set([tuple(sorted(i)) for i in tmp if i[0] != i[1]]))
+        self.table.setRowCount(len(res))
+        self.table.setColumnCount(3)
+        for i in res:
+            self.table.setItem(res.index(i), 2, QTableWidgetItem('-'))
+            self.table.setItem(res.index(i), 1, QTableWidgetItem(i[1]))
+            self.table.setItem(res.index(i), 0, QTableWidgetItem(i[0]))
+
+    def remove_current_item(self):
+        current_index = self.cb.currentIndex()
+        if current_index != -1:
+            self.cb.removeItem(current_index)
+
+    def load_to_file(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Directory")
+        file = path + "/расписание.xlsx"
+        wb = Workbook()
+
+        wb.save(file)
+
+    @pyqtSlot()
+    def save(self):
+        self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
+        #self.load_to_file()
+        calculate(database)
+        #MainWindow.drop_db()
+        for i in self.dump1:
+            print(i)
+        print('--------------------------------')
+        for i in self.dump2:
+            print(i)
+        print('--------------------------------')
+        for i in self.dump3:
+            print(i)
+
+    @pyqtSlot()
+    def get_games(self):
+        if self.cb.currentText() == "Дивизион":
+            return
+        res = []
+        for i in range(0, self.table.rowCount()):
+            res.append([])
+            for j in range(0, self.table.columnCount()):
+                res[i].append(self.table.item(i, j).text())
+        self.dump3 += res
+        if self.cb.count() <= 1:
+            return
+        else:
+            self.remove_current_item()
+
+    def to_db1(self):
+        for row in self.dump1:
+            team = models.Team(name=row[0],
+                               division=row[1],
+                               format=row[2],
+                               coach=row[3],
+                               stadium_wish=row[5],
+                               time_wish=row[6])
+            database.add(team)
+        database.commit()
+
+    def to_db2(self):
+        for row in self.dump2:
+            field = models.Field(format=row[0],
+                                 stadium=row[2],
+                                 name=row[3],
+                                 start_time=row[4],
+                                 duration=row[5],
+                                 games_amount=row[6])
+            database.add(field)
+        database.commit()
+
+    @staticmethod
+    def drop_db():
+        meta = Base.metadata
+        for table in reversed(meta.sorted_tables):
+            database.execute(table.delete())
+        database.commit()
+
+    def read(self, flag):
+        dump = []
+        check = False
+        for i in range(0, self.table.rowCount()):
+            #print(i)
+            dump.append([])
+            '''for j in range(0, self.table.columnCount()):
+                item = self.table.item(i, j)
+                if '' in dump[i]:
+                    check = True
+                    break
+                dump[i].append(item.text())'''
+
+            for j in range(0, self.table.columnCount()):
+
+                item = self.table.item(i, j)
+                if flag == 1 and (j == 7 or j == 6) and item.text() == '':
+                    dump[i].append(None)
+                else:
+                    dump[i].append(item.text())
+
+            if '' in dump[i]:
+                check = True
                 break
 
-            n_left = int(s[0].team.time_wish[:2])
-            n_right = int(s[0].team.time_wish[6:-3])
-            m_left = int(s[q + 1].team.time_wish[:2])
-            m_right = int(s[q + 1].team.time_wish[6:-3])
-            if m_left <= n_left <= m_right or m_left <= n_right <= m_right or n_left <= m_right <= n_right or n_left <= m_left <= n_right:
-                if m_left <= n_left <= m_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
-                    for count in range(len(use_fields)):
-                        for durat in range(len(use_fields[count].day.mass_time) - 1):
-                            if n_left <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
-                                    and len(s) > 1:
-                                k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]))
-                                #k = Games(s[0], s[q], str(use_fields[count].day.mass_time[durat]))
-                                mass_games.append(k)
-                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
-                                s.pop(0)
-                                s.pop(q)
-                                use_fields[count].day.mass_time.pop(durat)
-                elif m_left <= n_right <= m_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
-                    for count in range(len(use_fields)):
-                        for durat in range(len(use_fields[count].day.mass_time) - 1):
-                            if n_right <= use_fields[count].day.mass_time[durat] <= m_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
-                                    and len(s) > q:
-                                k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
-                                mass_games.append(k)
-                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
-                                s.pop(0)
-                                s.pop(q)
-                                use_fields[count].day.mass_time.pop(durat)
-                elif n_left <= m_right <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
-                    for count in range(len(use_fields)):
-                        for durat in range(len(use_fields[count].day.mass_time) - 1):
-                            if m_right <= use_fields[count].day.mass_time[durat] <= n_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
-                                    and len(s) > q:
-                                k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
-                                mass_games.append(k)
-                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
-                                s.pop(0)
-                                s.pop(q)
-                                use_fields[count].day.mass_time.pop(durat)
-                elif n_left <= m_left <= n_right: # skoree vsego nuzhno budet dobavit eshe odno uslovie o granicah s dregih storon
-                    for count in range(len(use_fields)):
-                        for durat in range(len(use_fields[count].day.mass_time) - 1):
-                            if m_left <= use_fields[count].day.mass_time[durat] <= n_right and use_fields[count].day.mass_time[durat+1] - use_fields[count].day.mass_time[durat] == 1.5\
-                                    and len(s) > q:
-                                k = Games(s[0], s[q+1], str(use_fields[count].day.mass_time[durat]))
-                                mass_games.append(k)
-                                #print(s[0].team.name, s[q + 1].team.name, use_fields[count].day.mass_time[durat])
-                                s.pop(0)
-                                s.pop(q)
-                                use_fields[count].day.mass_time.pop(durat)
-        break
+        if check:
+            QMessageBox.warning(self, "ВНИМАНИЕ!", "Заполните таблицу, перед тем как продолжить работу")
+        else:
+            if flag == 1:
+                self.dump1 = dump
+                self.data = DataParser.form_divs(self.dump1)
+                self.to_db1()
+                self.show_scene('Данные по туру', 7, ["Формат", "Дата", "Стадион", "Поле",
+                                                      "Время", "Время игры", "Количество игр"], self.enter3)
+            elif flag == 2:
+                self.dump2 = dump
+                self.to_db2()
+                self.scene3()
+
+    @pyqtSlot()
+    def insert(self):
+        self.table.setRowCount(self.table.rowCount() + 1)
+        for i in range(self.table.columnCount()):
+            self.table.setItem(self.table.rowCount() - 1, i, QTableWidgetItem(''))
+
+    @pyqtSlot()
+    def enter1(self):
+        self.show_scene('Команды', 8, ["Команда", "Дивизион", "Формат", "Тренер",
+                                       "Дата", "Стадион", "Время", "Доп. Время"], self.enter2)
+
+    @pyqtSlot()
+    def enter2(self):
+        self.read(1)
+
+    @pyqtSlot()
+    def enter3(self):
+        self.read(2)
+
+    def get_data(self):
+        return [self.dump1, self.dump2, self.dump3]
 
 
-out_teams = []
-
-for count in range(len(pr)):
-    counting = 0
-    for i in range(len(mass_games)):
-        if mass_teams[count].flag and mass_teams[count].team.name == mass_games[i].team1.team.name or \
-                mass_teams[count].team.name == mass_games[i].team2.team.name:
-            counting += 1
-    if counting == 0:
-        out_teams.append(mass_teams[count].team)
-#TODO нужно составить матчи с командами из out_teams и mass_teams, у к-ых !=flag
-print(len(out_teams))
-#TODO нужно составить матчи для всех командов, к-ые остались в mass_teams, у к-ых !=flag
-#TODO возможно(если он заметит) нужно будет составить вторые матчи для каждый команды (просто q в s увеличить на 1 по модулю len(s))
+if __name__ == "__main__":
+    app = QApplication(argv)
+    mw = MainWindow()
+    mw.showMaximized()
+    exit(app.exec())
