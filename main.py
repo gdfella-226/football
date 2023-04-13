@@ -6,6 +6,7 @@ from DataParser import DataParser
 from openpyxl import Workbook
 import models
 from database import init_db, SESSIONLOCAL, Base
+from algorithm import calculate
 
 init_db()
 
@@ -114,8 +115,9 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def save(self):
         self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
-        self.load_to_file()
-        MainWindow.drop_db()
+        #self.load_to_file()
+        calculate(database)
+        #MainWindow.drop_db()
         for i in self.dump1:
             print(i)
         print('--------------------------------')
@@ -146,22 +148,19 @@ class MainWindow(QMainWindow):
                                division=row[1],
                                format=row[2],
                                coach=row[3],
-                               date=row[4],
                                stadium_wish=row[5],
-                               time_wish=row[6],
-                               time_wish2=row[7])
+                               time_wish=row[6])
             database.add(team)
         database.commit()
 
     def to_db2(self):
         for row in self.dump2:
             field = models.Field(format=row[0],
-                                 date=row[1],
                                  stadium=row[2],
                                  name=row[3],
                                  start_time=row[4],
                                  duration=row[5],
-                                 plays_amount=row[6])
+                                 games_amount=row[6])
             database.add(field)
         database.commit()
 
@@ -176,13 +175,23 @@ class MainWindow(QMainWindow):
         dump = []
         check = False
         for i in range(0, self.table.rowCount()):
+            #print(i)
             dump.append([])
+            '''for j in range(0, self.table.columnCount()):
+                item = self.table.item(i, j)
+                if '' in dump[i]:
+                    check = True
+                    break
+                dump[i].append(item.text())'''
+
             for j in range(0, self.table.columnCount()):
+
                 item = self.table.item(i, j)
                 if flag == 1 and (j == 7 or j == 6) and item.text() == '':
                     dump[i].append(None)
                 else:
                     dump[i].append(item.text())
+
             if '' in dump[i]:
                 check = True
                 break
