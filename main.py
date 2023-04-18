@@ -3,10 +3,11 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTa
     QPushButton, QComboBox, QTableWidgetItem, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, pyqtSlot
 from DataParser import DataParser
-from openpyxl import Workbook
+from loguru import logger
 import models
 from database import init_db, SESSIONLOCAL, Base
 from algorithm import calculate
+from XLSX_handler import load_to_file
 
 init_db()
 
@@ -105,27 +106,29 @@ class MainWindow(QMainWindow):
         if current_index != -1:
             self.cb.removeItem(current_index)
 
-    def load_to_file(self):
+    def get_path(self):
         path = QFileDialog.getExistingDirectory(self, "Select Directory")
         file = path + "/расписание.xlsx"
-        wb = Workbook()
-
-        wb.save(file)
+        #load_to_file(database, file)
+        return file
 
     @pyqtSlot()
     def save(self):
-        self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
-        #self.load_to_file()
-        calculate(database)
-        #MainWindow.drop_db()
-        for i in self.dump1:
-            print(i)
-        print('--------------------------------')
-        for i in self.dump2:
-            print(i)
-        print('--------------------------------')
-        for i in self.dump3:
-            print(i)
+        try:
+            self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
+            print(calculate(database, self.get_path()))
+            #self.load_to_file()
+            #MainWindow.drop_db()
+            """for i in self.dump1:
+                print(i)
+            print('--------------------------------')
+            for i in self.dump2:
+                print(i)
+            print('--------------------------------')
+            for i in self.dump3:
+                print(i)"""
+        except Exception as err:
+            logger.info(err.with_traceback())
 
     @pyqtSlot()
     def get_games(self):

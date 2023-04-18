@@ -12,7 +12,7 @@ class Team(Base):
     time_wish = Column(Text)
     stadium_wish = Column(Text)
     format = Column(Text)
-    #match_time = Column(Text)
+    count_of_matches = Column(Integer, default=0)
 
 class Tour(Base):
     __tablename__ = "tours"
@@ -36,7 +36,9 @@ class Field(Base):
 class Games(Base):
     __tablename__ = "games"
     id = Column(Integer, primary_key=True)
-    ForeignKeyConstraint(["team1"], ["Team.id"])
-    ForeignKeyConstraint(["team2"], ["Team.id"])
-    flag = Column(Boolean)
-    ForeignKeyConstraint(["tour"], ["Tour.id"])
+    team1 = Column(Text)
+    team2 = Column(Text)
+    start_time = Column(Text)
+    stadium = Column(Text)
+    field = Column(Text)
+    division = Column(Text)
