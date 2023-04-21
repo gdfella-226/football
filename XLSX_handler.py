@@ -9,20 +9,37 @@ from database import init_db, SESSIONLOCAL, ENGINE
 
 def divide_by(arr, idx):
     res = []
+
     while len(arr) > 1:
+        mas = []
+        for i in range(len(arr)):
+            mas.append(arr[i][idx])
+        mas = list(set(mas))
+        for index in mas:
+            temp = []
+            for j in range(len(arr)):
+                if arr[j][idx] == index:
+                    temp.append(arr[j])
+            res += temp
+
+
+        '''print(1)
         current = arr[0][idx]
-        counter = 0
+        #print("cur: ", arr)
+        counter = 1
         tmp = []
         while counter < len(arr):
+            print(2)
             if arr[counter][idx] == current:
                 tmp.append(arr.pop(counter))
+                #print(len(arr))
             counter += 1
         res.append(tmp)
-    for i in res:
-        for j in i:
-            if arr[0][idx] in j and arr[0] not in i:
-                i.append(arr[0])
-                break
+        for i in res:
+            for j in i:
+                if arr[0][idx] in j and arr[0] not in i:
+                    i.append(arr[0])
+                    break'''
     return res
 
 
@@ -58,6 +75,7 @@ def set_headers(ws, fields):
 
 
 def load_to_file(database, file):
+    #print("--"*20)
     logger.info("xuy 2")
     wb = Workbook()
     orange_fill = PatternFill(start_color='EB8433',
@@ -70,6 +88,8 @@ def load_to_file(database, file):
         res.append([game.team1, game.team2, game.start_time,
                     game.stadium, game.field, game.division])
 
+    for elem in res:
+        print(elem)
     res = divide_by(res, 3)
 
     for elem in res:
@@ -83,6 +103,9 @@ def load_to_file(database, file):
                 ws.cell(row=i, column=j).fill = gray_fill'''
         sort_by(elem, 2)
         set_headers(ws, fields)
+        print(res.index(elem))
+        for i in elem:
+            print(i)
         for i in range(len(elem)):
             ws.cell(row=i + 2, column=fields.index(elem[i][4]) * 3 + 1).value = elem[i][2]
             ws.cell(row=i + 2, column=fields.index(elem[i][4]) * 3 + 2).value = (elem[i][0] + "\n" + elem[i][1])

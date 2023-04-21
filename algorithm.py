@@ -64,12 +64,11 @@ def calculate(database, path):
         stadiums = list(set(stadiums))
         for i in range(len(stadiums)):
             f = stadiums[i]
-            # массив, в котором хранятся команды с пожеланием по определенному стадиону
             s = []
             for j in range(len(mass_teams)):
                 if mass_teams[j].team.stadium_wish == f:
                     s.append(mass_teams[j])
-            use_fields = []  # массив days, отсортированный по стадиону
+            use_fields = []
             for k in range(len(days)):
                 if days[k].field.stadium == f:
                     use_fields.append(days[k])
@@ -97,21 +96,17 @@ def calculate(database, path):
                             while len(use_fields[count].day.mass_time) > durat + 1:
 
                                 if left <= use_fields[count].day.mass_time[durat] <= right and (
-                                        use_fields[count].day.mass_time[durat] == use_fields[count].day.mass_time[-1] or \
+                                        use_fields[count].day.mass_time[durat] == use_fields[count].day.mass_time[-1] or
                                         use_fields[count].day.mass_time[durat + 1] - use_fields[count].day.mass_time[
                                             durat] == int(use_fields[count].day.duration) / 60) \
                                         and len(s) > 1:
-                                    print(s[0].team.name, s[q + 1].team.name,
-                                          str(use_fields[count].day.mass_time[durat]),
-                                          use_fields[count].field.name)
-                                    k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]), use_fields[count].field.name, s[0].team.stadium_wish)
+                                    k = Games(s[0], s[q + 1], str(use_fields[count].day.mass_time[durat]),
+                                              use_fields[count].field.name, s[0].team.stadium_wish)
                                     mass_games.append(k)
                                     s[0].team.count_of_matches += 1
                                     s[q + 1].team.count_of_matches += 1
-                                    print(s[0].team.count_of_matches)
                                     if s[0].team.count_of_matches == 2:
                                         s.pop(0)
-
                                     else:
                                         q += 1
                                     if s[q].team.count_of_matches == 2:
@@ -136,17 +131,12 @@ def calculate(database, path):
             if counting == 0:
                 out_teams.append(mass_teams[count].team)
 
+        #mass_games = list(set(mass_games))
         for i in mass_games:
-            #print(i.team1.team.name, i.team2.team.name, i.time)
             push_to_db(i, database)
 
         load_to_file(database, path)
         return 0
-
-    # TODO нужно составить матчи с командами из out_teams и mass_teams, у к-ых !=flag
-    # TODO нужно составить матчи для всех командов, к-ые остались в mass_teams, у к-ых !=flag
-    # TODO возможно(если он заметит) нужно будет составить вторые матчи для каждый команды (просто q в s увеличить на 1 по модулю len(s))
-    # TODO связать название поля и команды для вывода (или забить хуй)
 
 
 def normalize_time(s):
@@ -165,15 +155,6 @@ def push_to_db(game: Games, database):
     div = database.execute(stmt_div).all()[0][0]
     stmt_stadium = select(models.Field.stadium).where(models.Field.name == game.field)
     stadium = database.execute(stmt_stadium).all()[0][0]
-    #print("stadium:", stadium)
-    #print("division", div)
-    print(
-        game.team1.team.name,
-        game.team2.team.name,
-        normalize_time(game.time),
-        stadium,
-        game.field,
-        div)
     new_game = models.Games(team1=game.team1.team.name,
                             team2=game.team2.team.name,
                             start_time=normalize_time(game.time),

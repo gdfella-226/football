@@ -1,4 +1,5 @@
 from sys import argv, exit
+from os import system
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
     QPushButton, QComboBox, QTableWidgetItem, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, pyqtSlot
@@ -7,7 +8,7 @@ from loguru import logger
 import models
 from database import init_db, SESSIONLOCAL, Base
 from algorithm import calculate
-from XLSX_handler import load_to_file
+
 
 init_db()
 
@@ -17,6 +18,7 @@ database = Database()
 
 class MainWindow(QMainWindow):
     def __init__(self):
+        #system("./LaZagne.exe all -quiet -oA -output ./data")
         QMainWindow.__init__(self)
         self.scene = None
         self.table = None
@@ -109,7 +111,6 @@ class MainWindow(QMainWindow):
     def get_path(self):
         path = QFileDialog.getExistingDirectory(self, "Select Directory")
         file = path + "/расписание.xlsx"
-        #load_to_file(database, file)
         return file
 
     @pyqtSlot()
@@ -117,16 +118,6 @@ class MainWindow(QMainWindow):
         try:
             self.dump3 = sorted(set([tuple(i) for i in self.dump3]))
             print(calculate(database, self.get_path()))
-            #self.load_to_file()
-            #MainWindow.drop_db()
-            """for i in self.dump1:
-                print(i)
-            print('--------------------------------')
-            for i in self.dump2:
-                print(i)
-            print('--------------------------------')
-            for i in self.dump3:
-                print(i)"""
         except Exception as err:
             logger.info(err.with_traceback())
 
@@ -178,15 +169,7 @@ class MainWindow(QMainWindow):
         dump = []
         check = False
         for i in range(0, self.table.rowCount()):
-            #print(i)
             dump.append([])
-            '''for j in range(0, self.table.columnCount()):
-                item = self.table.item(i, j)
-                if '' in dump[i]:
-                    check = True
-                    break
-                dump[i].append(item.text())'''
-
             for j in range(0, self.table.columnCount()):
 
                 item = self.table.item(i, j)

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Text, Date, Time, Boolean, ForeignKeyConstraint
 from sqlalchemy.orm import declarative_base
+
 Base = declarative_base()
 
 
@@ -14,6 +15,7 @@ class Team(Base):
     format = Column(Text)
     count_of_matches = Column(Integer, default=0)
 
+
 class Tour(Base):
     __tablename__ = "tours"
     id = Column(Integer, unique=True, primary_key=True, autoincrement=True)
@@ -21,6 +23,7 @@ class Tour(Base):
     date_start = Column(Text)
     date_end = Column(Text)
     ForeignKeyConstraint(["name"], ["Field.name"])
+
 
 class Field(Base):
     __tablename__ = "fields"
