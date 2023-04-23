@@ -1,3 +1,5 @@
+from traceback import print_exc
+
 from PyQt5.QtWidgets import QFileDialog
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -7,39 +9,40 @@ import models
 from database import init_db, SESSIONLOCAL, ENGINE
 
 
+def count_subelem(arr, idx):
+    counter = 0
+    for i in arr:
+        if i[idx] == arr[0][idx]:
+            counter += 1
+    return counter
+
+
 def divide_by(arr, idx):
     res = []
+    sort_by(arr, idx)
+    split_idx = count_subelem(arr, idx)
+    a1 = arr[:split_idx]
+    a2 = arr[split_idx:]
+    try:
+        if len(a1) != 0 and a1[2] < a2[2]:
+            sort_by(a1, 2)
+            res.append(a1)
+            res.append(a2)
+        elif len(a2) != 0 and a1[2] > a2[2]:
+            sort_by(a2, 2)
+            res.append(a2)
+            res.append(a1)
+        else:
+            res.append(a1)
+            res.append(a2)
+    except:
+        logger.info("Can't sort")
+        print_exc()
+        res.append(a1)
+        res.append(a2)
 
-    while len(arr) > 1:
-        mas = []
-        for i in range(len(arr)):
-            mas.append(arr[i][idx])
-        mas = list(set(mas))
-        for index in mas:
-            temp = []
-            for j in range(len(arr)):
-                if arr[j][idx] == index:
-                    temp.append(arr[j])
-            res += temp
-
-
-        '''print(1)
-        current = arr[0][idx]
-        #print("cur: ", arr)
-        counter = 1
-        tmp = []
-        while counter < len(arr):
-            print(2)
-            if arr[counter][idx] == current:
-                tmp.append(arr.pop(counter))
-                #print(len(arr))
-            counter += 1
-        res.append(tmp)
-        for i in res:
-            for j in i:
-                if arr[0][idx] in j and arr[0] not in i:
-                    i.append(arr[0])
-                    break'''
+    if [] in res:
+        res.remove([])
     return res
 
 
@@ -74,22 +77,27 @@ def set_headers(ws, fields):
         ws.cell(row=1, column=i * 3 + 3).fill = orange_fill
 
 
-def load_to_file(database, file):
+def load_to_file(database, file, games=None):
     #print("--"*20)
     logger.info("xuy 2")
     wb = Workbook()
     orange_fill = PatternFill(start_color='EB8433',
                               end_color='EB8433',
                               fill_type='solid')
-
-    games = database.query(models.Games).order_by(models.Games.stadium).all()
-    res = []
-    for game in games:
-        res.append([game.team1, game.team2, game.start_time,
-                    game.stadium, game.field, game.division])
+    if not games:
+        print("[picked from db]")
+        games = database.query(models.Games).order_by(models.Games.stadium).all()
+        res = []
+        for game in games:
+            res.append([game.team1, game.team2, game.start_time,
+                        game.stadium, game.field, game.division])
+    else:
+        print("[without db]")
+        res = games
 
     for elem in res:
         print(elem)
+    sort_by(res, 2)
     res = divide_by(res, 3)
 
     for elem in res:
@@ -116,11 +124,12 @@ def load_to_file(database, file):
     if 'Sheet' in wb.sheetnames:
         wb.remove(wb['Sheet'])
     wb.save(file)
+    #database.metadata.drop_all(ENGINE)
 
 
 if __name__ == "__main__":
     init_db()
     ENGINE.connect()
     database = SESSIONLOCAL()
-    file = "C:\\Users\\Danil\\Desktop\\tmp\\расписание.xlsx"
+    file = "C:\\Users\\Danil\\Desktop\\footballchik\\расписание.xlsx"
     load_to_file(database, file)
