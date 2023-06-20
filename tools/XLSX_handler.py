@@ -5,16 +5,47 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, PatternFill, Alignment
 from loguru import logger
-import models
-from database import init_db, SESSIONLOCAL, ENGINE
+from tools import models
+from tools.database import init_db, SESSIONLOCAL, ENGINE
 
 
-def count_subelem(arr, idx):
+def count_subelem(arr, idx, elem):
     counter = 0
-    for i in arr:
-        if i[idx] == arr[0][idx]:
-            counter += 1
-    return counter
+    for i in range(len(arr)-1, 0, -1):
+        counter += 1
+        if arr[i][idx] == elem:
+            break
+    return len(arr) - counter
+
+
+def unique(arr):
+    output = []
+    for x in arr:
+        if x not in output:
+            output.append(x)
+    return output
+
+
+def splitarray(arr, idx):
+    res = []
+    fields = unique([i[4] for i in arr])
+    sort_by(arr, idx)
+    splits = {i: 0 for i in fields}
+
+    for i in fields:
+        splits[i] = count_subelem(arr, idx, i)
+
+    iziclummoscow = 0
+    xuy = ""
+    for key, val in splits.items():
+        iziclummoscow += 1
+        if iziclummoscow == 1:
+            res.append(arr[:splits[key] + 1])
+        else:
+            res.append(arr[splits[xuy] + 1:splits[key] + 1])
+        xuy = key
+
+    return res
 
 
 def divide_by(arr, idx):
@@ -95,11 +126,12 @@ def load_to_file(database, file, games=None):
         print("[without db]")
         res = games
 
+    print("sosat:")
     for elem in res:
         print(elem)
     sort_by(res, 2)
-    res = divide_by(res, 3)
-
+    #res = divide_by(res, 3)
+    res = splitarray(res, 3)
     for elem in res:
         ws = wb.create_sheet(elem[0][3])
         ws.title = elem[0][3]
@@ -124,7 +156,11 @@ def load_to_file(database, file, games=None):
     if 'Sheet' in wb.sheetnames:
         wb.remove(wb['Sheet'])
     wb.save(file)
-    #database.metadata.drop_all(ENGINE)
+    try:
+        models.Base.metadata.drop_all(ENGINE)
+    except:
+        print('Sosi xuy')
+        print_exc()
 
 
 if __name__ == "__main__":

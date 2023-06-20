@@ -3,11 +3,11 @@ from os import system
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, \
     QPushButton, QComboBox, QTableWidgetItem, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, pyqtSlot
-from DataParser import DataParser
+from tools.DataParser import DataParser
 from loguru import logger
-import models
-from database import init_db, SESSIONLOCAL, Base
-from algorithm import calculate
+from tools import models
+from tools.database import init_db, SESSIONLOCAL, Base
+from tools.algorithm import calculate
 
 
 init_db()

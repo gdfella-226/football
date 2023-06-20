@@ -157,6 +157,8 @@ def normalize_time(s):
         if len(mins) != 2:
             mins += '0'
         i = str(floor(float(s))) + ":" + mins
+        if len(i) != 5:
+            i = '0'+i
         return i
     except:
         return s

@@ -1,0 +1,5 @@
+PyQt5==5.15.2
+openpyxl==3.1.2
+sqlalchemy==2.0.16
+loguru==0.6.0
+auto-py-to-exe==2.35.0
